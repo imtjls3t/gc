@@ -4,6 +4,8 @@ A personal gift-card wallet for Android Chrome. Import screenshots, display paym
 
 The app uses React, TypeScript, Vite, Dexie, Tesseract.js, ZXing WASM, and `vite-plugin-pwa`. It runs as a static site and needs no backend or account.
 
+[Open Giftcards](https://imtjls3t.github.io/gc/)
+
 Dependency versions are pinned in `package.json` and `package-lock.json`. See the [security audit](docs/security-audit.md) for findings, fixes, and deployment constraints.
 
 ## Use the wallet
