@@ -1,0 +1,25 @@
+node_modules/
+dist/
+public/vendor/
+public/icons/*.png
+test-results/
+playwright-report/
+*.tsbuildinfo
+.DS_Store
+
+# Local workspace notes
+/agents.md
+
+# Secrets and browser authentication state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+playwright/.auth/
+.playwright/
+*.log
