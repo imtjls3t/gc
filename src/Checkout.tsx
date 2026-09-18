@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Image, Maximize, RotateCw, Sun, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowLeft, Image, Maximize, Plus, Sun, ZoomIn, ZoomOut } from 'lucide-react';
 import { db } from './db';
 import { type Card, type Spend, money, remaining } from './model';
 import { go, goBack, Logo, Pin, useBlob } from './ui';
+import { SpendDialog } from './details';
 import costcoCard from '../assets/costco.png';
 
 function useWakeLock() {
@@ -57,7 +58,7 @@ export function Checkout({ card, spends }: { card: Card; spends: Spend[] }) {
   );
   const url = useBlob(stored?.blob),
     awake = useWakeLock();
-  const [rotated, setRotated] = useState(false),
+  const [spending, setSpending] = useState(false),
     [fullscreenMessage, setFullscreenMessage] = useState('');
   const back = card.archived ? '/archived' : '/wallet';
   const manualFullscreenExit = useRef(false),
@@ -90,16 +91,6 @@ export function Checkout({ card, spends }: { card: Card; spends: Spend[] }) {
       if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     };
   }, [card.id, back]);
-  const stage = useRef<HTMLDivElement>(null),
-    [size, setSize] = useState({ width: 300, height: 300 });
-  useEffect(() => {
-    const observer = new ResizeObserver((entries) => {
-      const box = entries[0].contentRect;
-      setSize({ width: box.width, height: box.height });
-    });
-    if (stage.current) observer.observe(stage.current);
-    return () => observer.disconnect();
-  }, []);
   async function fullscreen() {
     try {
       if (document.fullscreenElement) {
@@ -157,15 +148,8 @@ export function Checkout({ card, spends }: { card: Card; spends: Spend[] }) {
           height={153}
         />
       )}
-      <div className="barcode-stage" ref={stage} aria-label="Payment barcode">
-        <div
-          className="barcode-fit"
-          style={{
-            width: rotated ? size.height : size.width,
-            height: rotated ? size.width : size.height,
-            transform: `translate(-50%, -50%) rotate(${rotated ? 90 : 0}deg)`,
-          }}
-        >
+      <div className="barcode-stage" aria-label="Payment barcode">
+        <div className="barcode-fit">
           {url ? (
             <img src={url} alt={`${card.retailer} payment barcode`} />
           ) : (
@@ -179,18 +163,14 @@ export function Checkout({ card, spends }: { card: Card; spends: Spend[] }) {
         <div className="checkout-controls">
           <button
             className="button secondary"
-            onClick={() => setRotated(!rotated)}
-            aria-pressed={rotated}
-          >
-            <RotateCw size={18} />
-            Rotate
-          </button>
-          <button
-            className="button secondary"
             onClick={() => go(`/image/${card.id}?from=checkout`)}
           >
             <Image size={18} />
             Original image
+          </button>
+          <button className="button secondary" onClick={() => setSpending(true)}>
+            <Plus size={18} />
+            Add Spend
           </button>
         </div>
         <p className="awake-status">
@@ -198,6 +178,7 @@ export function Checkout({ card, spends }: { card: Card; spends: Spend[] }) {
           {awake ? 'Keeping your screen awake' : 'Tap your screen if it begins to dim'}
         </p>
       </div>
+      {spending && <SpendDialog card={card} spends={spends} close={() => setSpending(false)} />}
     </main>
   );
 }

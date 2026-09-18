@@ -3,6 +3,7 @@ import { Archive, Image, Pencil, Plus, ScanLine, Trash2, Undo2 } from 'lucide-re
 import {
   type Card,
   type Spend,
+  centsInput,
   expiryLabel,
   localDateTime,
   money,
@@ -66,12 +67,13 @@ export function SpendDialog({
           <input
             required
             autoFocus
-            inputMode="decimal"
+            inputMode="numeric"
             placeholder="0.00"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => setAmount(centsInput(e.target.value))}
           />
         </label>
+        <p className="field-help">Type the amount in cents. For example, 11622 becomes 116.22.</p>
         <label>
           Spending date
           <input

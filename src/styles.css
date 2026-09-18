@@ -1261,8 +1261,7 @@ dialog::backdrop {
 }
 .barcode-fit {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  inset: 0;
   padding: 12px;
   display: flex;
   align-items: center;
@@ -1290,14 +1289,15 @@ dialog::backdrop {
   max-width: 800px;
 }
 .checkout-controls {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
   margin-top: 10px;
 }
 .checkout-controls .button {
   font-size: 12px;
   min-height: 42px;
+  min-width: 154px;
   padding: 10px 16px;
 }
 .awake-status {
@@ -1612,7 +1612,7 @@ dialog::backdrop {
   }
   .checkout-bottom {
     position: relative;
-    padding-bottom: 42px;
+    padding-bottom: 84px;
   }
   .checkout-bottom .pin {
     position: absolute;

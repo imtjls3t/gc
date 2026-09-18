@@ -63,6 +63,12 @@ export function parseMoney(value: string): number {
     throw new Error('Amount is too large.');
   return result;
 }
+export function centsInput(value: string): string {
+  const digits = value.replace(/\D/g, '').replace(/^0+/, '');
+  if (!digits) return '';
+  const padded = digits.padStart(3, '0');
+  return `${padded.slice(0, -2)}.${padded.slice(-2)}`;
+}
 export const money = (cents: number) =>
   new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(cents / 100);
 export const moneyInput = (cents: number) => (cents / 100).toFixed(2);

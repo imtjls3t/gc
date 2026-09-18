@@ -86,11 +86,24 @@ test('complete offline import, checkout, PIN, spending, editing, archive and res
   await expect(page.getByRole('img', { name: 'Costco payment barcode' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Add gift card', exact: true })).toBeHidden();
   await page.getByRole('button', { name: 'Show PIN', exact: true }).click();
-  await page.getByRole('button', { name: 'Rotate', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Rotate', exact: true })).toHaveAttribute(
-    'aria-pressed',
-    'true',
+  await expect(page.getByRole('button', { name: 'Rotate', exact: true })).toHaveCount(0);
+  const originalImageButton = page.getByRole('button', { name: 'Original image', exact: true });
+  const addSpendButton = page.getByRole('button', { name: 'Add Spend', exact: true });
+  const actionPositions = await Promise.all([
+    originalImageButton.boundingBox(),
+    addSpendButton.boundingBox(),
+  ]);
+  expect(actionPositions[0]!.y).toBeLessThan(actionPositions[1]!.y);
+  expect(actionPositions[1]!.y - actionPositions[0]!.y).toBeGreaterThanOrEqual(
+    actionPositions[0]!.height,
   );
+  await addSpendButton.click();
+  const checkoutSpend = page.getByLabel('Amount spent', { exact: false });
+  await checkoutSpend.fill('11622');
+  await expect(checkoutSpend).toHaveValue('116.22');
+  await checkoutSpend.fill('10');
+  await expect(checkoutSpend).toHaveValue('0.10');
+  await page.getByRole('button', { name: 'Save spending', exact: true }).click();
   // Headless Chromium cannot resize its OS window while it is fullscreen.
   if (await page.evaluate(() => !!document.fullscreenElement))
     await page.getByRole('button', { name: 'Toggle fullscreen' }).click();
@@ -117,9 +130,6 @@ test('complete offline import, checkout, PIN, spending, editing, archive and res
   await expect(page.getByText('0042', { exact: true })).toBeHidden();
   await page.getByRole('button', { name: 'Exit checkout' }).click();
   await page.setViewportSize({ width: 412, height: 839 });
-  await page.getByRole('button', { name: 'Record spending for Costco' }).click();
-  await page.getByLabel('Amount spent', { exact: false }).fill('0.10');
-  await page.getByRole('button', { name: 'Save spending', exact: true }).click();
   await page.getByRole('button', { name: 'Details and history for Costco' }).click();
   await expect(page.locator('.detail-amount')).toHaveText('$75.45');
   const [initialSpend] = await readStore(page, 'spends');

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseMoney, validDate, expiryLabel } from '../src/model';
+import { centsInput, parseMoney, validDate, expiryLabel } from '../src/model';
 import { recognizeText } from '../src/recognition';
 
 describe('CAD values', () => {
@@ -14,6 +14,15 @@ describe('CAD values', () => {
   it.each(['-1', '1.001', '1e2', 'Infinity', 'NaN', '1,000', '', '1000001', '0.1x'])(
     'rejects invalid money %s',
     (text) => expect(() => parseMoney(text)).toThrow(),
+  );
+  it.each([
+    ['1', '0.01'],
+    ['11622', '116.22'],
+    ['116.22', '116.22'],
+    ['$001.02', '1.02'],
+    ['', ''],
+  ])('formats cents-first input %s as %s', (text, formatted) =>
+    expect(centsInput(text)).toBe(formatted),
   );
   it('validates calendar dates without timezone changes', () => {
     expect(validDate('2030-02-30')).toBe(false);

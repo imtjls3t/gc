@@ -60,11 +60,12 @@ test('a plain HTTP origin can import, save, scan, spend, reload and detect dupli
   await expect(page.getByRole('img', { name: 'Costco payment barcode' })).toBeVisible();
   await page.getByRole('button', { name: 'Show PIN', exact: true }).click();
   await expect(page.getByText('0042', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Exit checkout' }).click();
-  await page.getByRole('button', { name: 'Record spending for Costco' }).click();
-  await page.getByLabel('Amount spent', { exact: false }).fill('12.34');
+  await page.getByRole('button', { name: 'Add Spend', exact: true }).click();
+  await page.getByLabel('Amount spent', { exact: false }).fill('1234');
+  await expect(page.getByLabel('Amount spent', { exact: false })).toHaveValue('12.34');
   await page.getByRole('button', { name: 'Save spending', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
+  await page.getByRole('button', { name: 'Exit checkout' }).click();
   await page.reload();
   await expect(
     page.getByRole('button', { name: 'Open Costco barcode, $87.66 remaining' }),
