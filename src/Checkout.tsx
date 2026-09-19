@@ -177,6 +177,7 @@ export function Checkout({ card, spends }: { card: Card; spends: Spend[] }) {
           <span className={awake ? 'status-dot' : 'status-dot muted-dot'} />
           {awake ? 'Keeping your screen awake' : 'Tap your screen if it begins to dim'}
         </p>
+        <div className="checkout-bottom-spacer" aria-hidden="true" />
       </div>
       {spending && <SpendDialog card={card} spends={spends} close={() => setSpending(false)} />}
     </main>

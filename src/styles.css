@@ -1289,15 +1289,17 @@ dialog::backdrop {
   max-width: 800px;
 }
 .checkout-controls {
-  display: grid;
-  justify-items: center;
+  display: flex;
+  justify-content: center;
   gap: 8px;
-  margin-top: 10px;
+  width: min(100%, 316px);
+  margin: 10px auto 0;
 }
 .checkout-controls .button {
+  flex: 1 1 0;
   font-size: 12px;
   min-height: 42px;
-  min-width: 154px;
+  min-width: 0;
   padding: 10px 16px;
 }
 .awake-status {
@@ -1308,6 +1310,9 @@ dialog::backdrop {
   margin: 14px 0 4px;
   font-size: 10px;
   color: #8e9b83;
+}
+.checkout-bottom-spacer {
+  height: 42px;
 }
 .image-viewer {
   height: 100dvh;
@@ -1612,19 +1617,19 @@ dialog::backdrop {
   }
   .checkout-bottom {
     position: relative;
-    padding-bottom: 84px;
+    padding-bottom: 79px;
   }
   .checkout-bottom .pin {
     position: absolute;
     left: 0;
-    bottom: 0;
+    bottom: 42px;
     max-width: 47%;
     min-height: 38px;
   }
   .checkout-controls {
     position: absolute;
     right: 0;
-    bottom: 0;
+    bottom: 42px;
     margin: 0;
   }
   .checkout-controls .button {
@@ -1633,6 +1638,9 @@ dialog::backdrop {
     font-size: 11px;
   }
   .awake-status {
+    display: none;
+  }
+  .checkout-bottom-spacer {
     display: none;
   }
   .barcode-number {

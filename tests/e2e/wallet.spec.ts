@@ -93,10 +93,10 @@ test('complete offline import, checkout, PIN, spending, editing, archive and res
     originalImageButton.boundingBox(),
     addSpendButton.boundingBox(),
   ]);
-  expect(actionPositions[0]!.y).toBeLessThan(actionPositions[1]!.y);
-  expect(actionPositions[1]!.y - actionPositions[0]!.y).toBeGreaterThanOrEqual(
-    actionPositions[0]!.height,
-  );
+  expect(Math.abs(actionPositions[0]!.y - actionPositions[1]!.y)).toBeLessThan(2);
+  const bottomSpacer = await page.locator('.checkout-bottom-spacer').boundingBox();
+  expect(bottomSpacer!.height).toBe(42);
+  expect(bottomSpacer!.y).toBeGreaterThan(actionPositions[0]!.y + actionPositions[0]!.height);
   await addSpendButton.click();
   const checkoutSpend = page.getByLabel('Amount spent', { exact: false });
   await checkoutSpend.fill('11622');
@@ -108,6 +108,12 @@ test('complete offline import, checkout, PIN, spending, editing, archive and res
   if (await page.evaluate(() => !!document.fullscreenElement))
     await page.getByRole('button', { name: 'Toggle fullscreen' }).click();
   await page.setViewportSize({ width: 900, height: 412 });
+  const landscapeActions = await Promise.all([
+    originalImageButton.boundingBox(),
+    addSpendButton.boundingBox(),
+  ]);
+  expect(Math.abs(landscapeActions[0]!.y - landscapeActions[1]!.y)).toBeLessThan(2);
+  expect(412 - (landscapeActions[0]!.y + landscapeActions[0]!.height)).toBeGreaterThanOrEqual(42);
   const fits = () =>
     page.locator('.barcode-fit').evaluate((element) => {
       const image = element.getBoundingClientRect(),
