@@ -1,4 +1,13 @@
-import { useEffect, useId, useRef, useState, type ReactNode, type FormEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+  type FormEvent,
+  type RefObject,
+} from 'react';
 import { ArrowLeft, Eye, EyeOff, X, ShieldCheck } from 'lucide-react';
 import { type CardFields, type Expiry, parseMoney, moneyInput } from './model';
 
@@ -116,19 +125,23 @@ export function Modal({
   title,
   children,
   close,
+  initialFocus,
 }: {
   title: string;
   children: ReactNode;
   close: () => void;
+  initialFocus?: RefObject<HTMLElement | null>;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     ref.current?.showModal();
+    // Inputs cannot receive focus until the dialog is open.
+    initialFocus?.current?.focus();
     return () => {
       previous?.focus();
     };
-  }, []);
+  }, [initialFocus]);
   return (
     <dialog
       ref={ref}

@@ -99,6 +99,7 @@ test('complete offline import, checkout, PIN, spending, editing, archive and res
   expect(bottomSpacer!.y).toBeGreaterThan(actionPositions[0]!.y + actionPositions[0]!.height);
   await addSpendButton.click();
   const checkoutSpend = page.getByLabel('Amount spent', { exact: false });
+  await expect(checkoutSpend).toBeFocused();
   await checkoutSpend.fill('11622');
   await expect(checkoutSpend).toHaveValue('116.22');
   await checkoutSpend.fill('10');

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { Archive, Image, Pencil, Plus, ScanLine, Trash2, Undo2 } from 'lucide-react';
 import {
   type Card,
@@ -27,6 +27,7 @@ export function SpendDialog({
   entry?: Spend;
   close: () => void;
 }) {
+  const amountInput = useRef<HTMLInputElement>(null);
   const [amount, setAmount] = useState(entry ? moneyInput(entry.amountCents) : '');
   const [date, setDate] = useState(localDateTime(entry?.spentAt));
   const [error, setError] = useState(''),
@@ -50,6 +51,7 @@ export function SpendDialog({
   return (
     <Modal
       title={entry ? 'Edit spending' : 'Record spending'}
+      initialFocus={amountInput}
       close={() => {
         if (!busy) close();
       }}
@@ -65,8 +67,8 @@ export function SpendDialog({
         <label>
           Amount spent <span className="field-unit">CAD</span>
           <input
+            ref={amountInput}
             required
-            autoFocus
             inputMode="numeric"
             placeholder="0.00"
             value={amount}
