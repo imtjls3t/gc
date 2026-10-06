@@ -43,7 +43,15 @@ function WalletApp() {
   const card = wallet?.cards.find((c) => c.id === id);
   const choose = () => fileInput.current?.click();
   return (
-    <>
+    <div className={`app-frame${immersive ? ' immersive' : ''}`}>
+      {pwa.update && (
+        <div className="update-banner" role="status">
+          <span>A newer version of Giftcards is available.</span>
+          <button className="text-button" onClick={() => setUpdateConfirm(true)}>
+            Update app
+          </button>
+        </div>
+      )}
       <input
         type="file"
         accept="image/png,image/jpeg,image/webp"
@@ -99,14 +107,6 @@ function WalletApp() {
             </div>
           </div>
         </header>
-      )}
-      {!immersive && pwa.update && (
-        <div className="update-banner">
-          <span>An update is available.</span>
-          <button className="text-button" onClick={() => setUpdateConfirm(true)}>
-            Update app
-          </button>
-        </div>
       )}
       {!wallet ? (
         <main className="loading-wallet" role="status">
@@ -221,7 +221,7 @@ function WalletApp() {
           </div>
         </Modal>
       )}
-    </>
+    </div>
   );
 }
 class StorageBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {

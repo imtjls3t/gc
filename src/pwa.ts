@@ -10,6 +10,23 @@ let ready = false,
   failed = false;
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((listener) => listener());
+const showUpdate = () => {
+  update = true;
+  notify();
+};
+let checkingUpdate = false;
+async function checkForUpdate() {
+  if (!registration || document.hidden || !navigator.onLine || checkingUpdate) return;
+  checkingUpdate = true;
+  try {
+    await registration.update();
+    if (registration.waiting) showUpdate();
+  } catch {
+    // Keep the cached app usable if the network or update server is unavailable.
+  } finally {
+    checkingUpdate = false;
+  }
+}
 async function checkOffline() {
   const active = registration?.active;
   if (!active) return;
@@ -31,19 +48,18 @@ if (offlineSupported)
   registerSW({
     // Reloads are controlled below, only after this tab's explicit acceptance.
     onNeedReload() {},
-    onNeedRefresh() {
-      update = true;
-      notify();
-    },
+    onNeedRefresh: showUpdate,
     onOfflineReady() {
       void checkOffline();
     },
     onRegisteredSW(_url, reg) {
       registration = reg;
+      if (reg?.waiting) showUpdate();
       void navigator.serviceWorker.ready.then(() => checkOffline());
       const trackInstall = () => {
         const installing = reg?.installing;
         installing?.addEventListener('statechange', () => {
+          if (installing.state === 'installed' && reg?.active) showUpdate();
           if (installing.state === 'redundant' && !reg?.active) {
             failed = true;
             notify();
@@ -53,12 +69,26 @@ if (offlineSupported)
       };
       trackInstall();
       reg?.addEventListener('updatefound', trackInstall);
+      void checkForUpdate();
+      setInterval(() => void checkForUpdate(), 60_000);
     },
     onRegisterError() {
       failed = true;
       notify();
     },
   });
+if (offlineSupported) {
+  let controller = navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    const next = navigator.serviceWorker.controller;
+    // Another tab may activate an update while this tab still runs older app code.
+    if (controller && next !== controller) showUpdate();
+    controller = next;
+    void checkOffline();
+  });
+}
+window.addEventListener('online', () => void checkForUpdate());
+window.addEventListener('focus', () => void checkForUpdate());
 window.addEventListener('beforeinstallprompt', (event) => {
   event.preventDefault();
   install = event as InstallEvent;
@@ -71,7 +101,7 @@ window.addEventListener('appinstalled', () => {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     void checkOffline();
-    void registration?.update().catch(() => {});
+    void checkForUpdate();
   }
 });
 export function usePWA() {

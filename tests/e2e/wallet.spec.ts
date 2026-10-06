@@ -440,9 +440,11 @@ test('system fullscreen exit returns to the wallet while manual toggle and image
 
 test('offline readiness reflects missing cache assets and new service workers wait for acceptance', async ({
   page,
+  context,
 }) => {
   await page.goto('./');
   await expect(page.getByText('Ready offline', { exact: true })).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator('.update-banner')).toHaveCount(0);
   await importFixture(page, await screenshotFixture());
   await page.getByRole('button', { name: 'Add to wallet' }).click();
   await expect(page.getByRole('heading', { name: 'Card details', exact: true })).toBeVisible();
@@ -468,11 +470,38 @@ test('offline readiness reflects missing cache assets and new service workers wa
   const originalWorker = await readFile('dist/sw.js', 'utf8');
   try {
     await writeFile('dist/sw.js', `${originalWorker}\n// Synthetic acceptance test update\n`);
-    await page.evaluate(async () => {
-      const reg = await navigator.serviceWorker.getRegistration();
-      await reg!.update();
-    });
+    // Reconnecting checks for updates without a manual refresh or worker API call.
+    await page.evaluate(() => window.dispatchEvent(new Event('online')));
     await expect(page.getByRole('button', { name: 'Update app', exact: true })).toBeVisible();
+    const banner = page.locator('.update-banner');
+    expect((await banner.boundingBox())!.y).toBe(0);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    expect((await banner.boundingBox())!.y).toBe(0);
+    await page.getByRole('button', { name: 'Show barcode', exact: true }).click();
+    await expect(banner).toBeVisible();
+    const fitsViewport = () =>
+      page.locator('.checkout').evaluate((element) => {
+        const bounds = element.getBoundingClientRect();
+        const bannerBottom = document
+          .querySelector('.update-banner')!
+          .getBoundingClientRect().bottom;
+        return bounds.top >= bannerBottom && bounds.bottom <= window.innerHeight;
+      });
+    await expect.poll(fitsViewport).toBe(true);
+    if (await page.evaluate(() => !!document.fullscreenElement))
+      await page.getByRole('button', { name: 'Toggle fullscreen' }).click();
+    await page.setViewportSize({ width: 900, height: 412 });
+    await expect.poll(fitsViewport).toBe(true);
+    await page.getByRole('button', { name: 'Original image', exact: true }).click();
+    await expect(banner).toBeVisible();
+    await page.getByRole('button', { name: 'Close image', exact: true }).click();
+    await page.getByRole('button', { name: 'Exit checkout', exact: true }).click();
+    await page.setViewportSize({ width: 412, height: 839 });
+    await page.getByRole('button', { name: 'Details and history for Costco' }).click();
+    // An already waiting update must also be advertised when opening a new tab.
+    const otherTab = await context.newPage();
+    await otherTab.goto('./');
+    await expect(otherTab.locator('.update-banner')).toBeVisible();
     expect(
       await page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration())?.waiting),
     ).toBe(true);
@@ -489,6 +518,34 @@ test('offline readiness reflects missing cache assets and new service workers wa
     await expect(page.getByRole('heading', { name: 'Card details', exact: true })).toBeVisible();
     expect(await readStore(page, 'cards')).toEqual(saved);
     await expect(page.getByText('Ready offline', { exact: true })).toBeVisible();
+    await expect(banner).toHaveCount(0);
+    // Updating one tab leaves the older app running in the other until accepted.
+    await expect(otherTab.locator('.update-banner')).toBeVisible();
+    await otherTab.getByRole('button', { name: 'Update app', exact: true }).click();
+    await Promise.all([
+      otherTab.waitForEvent('load'),
+      otherTab.getByRole('button', { name: 'Update and reload', exact: true }).click(),
+    ]);
+    await expect(otherTab.locator('.update-banner')).toHaveCount(0);
+    await otherTab.close();
+  } finally {
+    await writeFile('dist/sw.js', originalWorker);
+  }
+});
+
+test('an open app checks periodically for a newer version', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('./');
+  await expect(page.getByText('Ready offline', { exact: true })).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator('.update-banner')).toHaveCount(0);
+  const originalWorker = await readFile('dist/sw.js', 'utf8');
+  try {
+    await writeFile('dist/sw.js', `${originalWorker}\n// Synthetic periodic update\n`);
+    await page.clock.fastForward(60_000);
+    await expect(page.locator('.update-banner')).toBeVisible();
+    expect(
+      await page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration())?.waiting),
+    ).toBe(true);
   } finally {
     await writeFile('dist/sw.js', originalWorker);
   }
